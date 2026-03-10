@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, LogOut, MapPin, Clock, Users, TrendingUp, Calendar, CheckCircle, XCircle, Loader } from 'lucide-react';
 
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'https://texlaattendance-backend.onrender.com/api';
 
 // ============ Auth Context ============
 const AuthContext = React.createContext();
