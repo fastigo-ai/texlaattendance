@@ -140,11 +140,11 @@ const Login = () => {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
+          {/* <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
             <p className="text-xs text-purple-200 mb-2">Demo Credentials:</p>
             <p className="text-xs text-white">Admin: admin@texla.com / admin123</p>
             <p className="text-xs text-white">Employee: employee@texla.com / emp123</p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
