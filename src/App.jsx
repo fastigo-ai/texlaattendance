@@ -1,34 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { Camera, LogOut, MapPin, Clock, Users, TrendingUp, Calendar, CheckCircle, XCircle, Loader } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  Camera,
+  LogOut,
+  MapPin,
+  Clock,
+  Users,
+  TrendingUp,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  Loader,
+} from "lucide-react";
 
-const API_URL = 'https://texlaattendance-backend.onrender.com/api';
+const API_URL = "https://jellyfish-app-t49ho.ondigitalocean.app/api";
 
 // ============ Auth Context ============
 const AuthContext = React.createContext();
 
 const useAuth = () => {
   const context = React.useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
   return context;
 };
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (token) {
       fetch(`${API_URL}/auth/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           setUser(data);
           setLoading(false);
         })
         .catch(() => {
-          localStorage.removeItem('token');
+          localStorage.removeItem("token");
           setToken(null);
           setLoading(false);
         });
@@ -39,21 +50,21 @@ const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (!response.ok) throw new Error('Login failed');
+    if (!response.ok) throw new Error("Login failed");
 
     const data = await response.json();
     setToken(data.token);
     setUser(data.user);
-    localStorage.setItem('token', data.token);
+    localStorage.setItem("token", data.token);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setToken(null);
     setUser(null);
   };
@@ -67,21 +78,21 @@ const AuthProvider = ({ children }) => {
 
 // ============ Login Component ============
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await login(email, password);
     } catch (err) {
-      setError('Invalid email or password');
+      setError("Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -94,7 +105,10 @@ const Login = () => {
       <div className="relative w-full max-w-md">
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold text-white mb-2" style={{ fontFamily: 'Playfair Display, serif' }}>
+            <h1
+              className="text-5xl font-bold text-white mb-2"
+              style={{ fontFamily: "Playfair Display, serif" }}
+            >
               Texla
             </h1>
             <p className="text-purple-200 text-sm">Sales Visit Tracking</p>
@@ -102,7 +116,9 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Email</label>
+              <label className="block text-white text-sm font-medium mb-2">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -114,7 +130,9 @@ const Login = () => {
             </div>
 
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Password</label>
+              <label className="block text-white text-sm font-medium mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
@@ -136,7 +154,7 @@ const Login = () => {
               disabled={loading}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:from-purple-600 hover:to-pink-600 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
@@ -154,18 +172,18 @@ const Login = () => {
 // ============ Employee Dashboard ============
 const EmployeeDashboard = () => {
   const { user, token, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('visit');
+  const [activeTab, setActiveTab] = useState("visit");
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Visit form state
-  const [shopName, setShopName] = useState('');
+  const [shopName, setShopName] = useState("");
   const [photo, setPhoto] = useState(null);
   const [location, setLocation] = useState(null);
   const [endDayPhoto, setEndDayPhoto] = useState(null);
   const [leaves, setLeaves] = useState([]);
-  const [leaveDate, setLeaveDate] = useState('');
-  const [leaveReason, setLeaveReason] = useState('');
+  const [leaveDate, setLeaveDate] = useState("");
+  const [leaveReason, setLeaveReason] = useState("");
 
   useEffect(() => {
     fetchVisits();
@@ -175,38 +193,39 @@ const EmployeeDashboard = () => {
   const fetchLeaves = async () => {
     try {
       const response = await fetch(`${API_URL}/leave/user/${user.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       setLeaves(data.leave_requests || []);
     } catch (err) {
-      console.error('Failed to fetch leaves', err);
+      console.error("Failed to fetch leaves", err);
     }
   };
 
   const fetchVisits = async () => {
     try {
       const response = await fetch(`${API_URL}/visits`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await response.json();
       setVisits(data.visits || []);
     } catch (err) {
-      console.error('Failed to fetch visits', err);
+      console.error("Failed to fetch visits", err);
     }
   };
 
   const getLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation not supported'));
+        reject(new Error("Geolocation not supported"));
       }
       navigator.geolocation.getCurrentPosition(
-        (position) => resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        }),
-        reject
+        (position) =>
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          }),
+        reject,
       );
     });
   };
@@ -220,21 +239,21 @@ const EmployeeDashboard = () => {
       setLocation(loc);
 
       const formData = new FormData();
-      formData.append('shop_name', shopName);
-      formData.append('latitude', loc.latitude);
-      formData.append('longitude', loc.longitude);
-      formData.append('photo', photo);
+      formData.append("shop_name", shopName);
+      formData.append("latitude", loc.latitude);
+      formData.append("longitude", loc.longitude);
+      formData.append("photo", photo);
 
       const response = await fetch(`${API_URL}/visits/start`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
-      if (!response.ok) throw new Error('Failed to start visit');
+      if (!response.ok) throw new Error("Failed to start visit");
 
-      alert('Visit started successfully!');
-      setShopName('');
+      alert("Visit started successfully!");
+      setShopName("");
       setPhoto(null);
       fetchVisits();
     } catch (err) {
@@ -246,24 +265,24 @@ const EmployeeDashboard = () => {
 
   const handleEndDay = async () => {
     if (!endDayPhoto) {
-      alert('Please select a photo first');
+      alert("Please select a photo first");
       return;
     }
 
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('photo', endDayPhoto);
+      formData.append("photo", endDayPhoto);
 
       const response = await fetch(`${API_URL}/visits/end-day`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
-      if (!response.ok) throw new Error('Failed to end day');
+      if (!response.ok) throw new Error("Failed to end day");
 
-      alert('Day ended successfully!');
+      alert("Day ended successfully!");
       setEndDayPhoto(null);
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -277,19 +296,19 @@ const EmployeeDashboard = () => {
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/leave/request`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ leave_date: leaveDate, reason: leaveReason })
+        body: JSON.stringify({ leave_date: leaveDate, reason: leaveReason }),
       });
 
-      if (!response.ok) throw new Error('Failed to request leave');
+      if (!response.ok) throw new Error("Failed to request leave");
 
-      alert('Leave request submitted!');
-      setLeaveDate('');
-      setLeaveReason('');
+      alert("Leave request submitted!");
+      setLeaveDate("");
+      setLeaveReason("");
       fetchLeaves();
     } catch (err) {
       alert(`Error: ${err.message}`);
@@ -304,7 +323,12 @@ const EmployeeDashboard = () => {
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>Texla</h1>
+            <h1
+              className="text-2xl font-bold text-gray-900"
+              style={{ fontFamily: "Playfair Display, serif" }}
+            >
+              Texla
+            </h1>
             <p className="text-sm text-gray-600">{user?.name}</p>
           </div>
           <button
@@ -321,38 +345,42 @@ const EmployeeDashboard = () => {
       <div className="max-w-4xl mx-auto px-4 mt-6">
         <div className="flex gap-2 bg-white rounded-lg p-2 shadow-sm">
           <button
-            onClick={() => setActiveTab('visit')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${activeTab === 'visit'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("visit")}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+              activeTab === "visit"
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Start Visit
           </button>
           <button
-            onClick={() => setActiveTab('end')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${activeTab === 'end'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("end")}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+              activeTab === "end"
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             End Day
           </button>
           <button
-            onClick={() => setActiveTab('leave')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${activeTab === 'leave'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("leave")}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+              activeTab === "leave"
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Leave
           </button>
           <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${activeTab === 'history'
-              ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("history")}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
+              activeTab === "history"
+                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             History
           </button>
@@ -361,12 +389,16 @@ const EmployeeDashboard = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {activeTab === 'visit' && (
+        {activeTab === "visit" && (
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Start New Visit</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Start New Visit
+            </h2>
             <form onSubmit={handleStartVisit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Shop Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Shop Name
+                </label>
                 <input
                   type="text"
                   value={shopName}
@@ -378,7 +410,9 @@ const EmployeeDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Visit Photo (Required)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Visit Photo (Required)
+                </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition">
                   <Camera size={48} className="mx-auto text-gray-400 mb-2" />
                   <input
@@ -390,8 +424,11 @@ const EmployeeDashboard = () => {
                     id="visit-photo"
                     required
                   />
-                  <label htmlFor="visit-photo" className="cursor-pointer text-blue-600 font-medium">
-                    {photo ? photo.name : 'Tap to take photo'}
+                  <label
+                    htmlFor="visit-photo"
+                    className="cursor-pointer text-blue-600 font-medium"
+                  >
+                    {photo ? photo.name : "Tap to take photo"}
                   </label>
                 </div>
               </div>
@@ -400,8 +437,13 @@ const EmployeeDashboard = () => {
                 <div className="bg-blue-50 rounded-lg p-4 flex items-center gap-3">
                   <MapPin size={20} className="text-blue-600" />
                   <div className="text-sm">
-                    <p className="font-medium text-gray-900">Location Captured</p>
-                    <p className="text-gray-600">{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</p>
+                    <p className="font-medium text-gray-900">
+                      Location Captured
+                    </p>
+                    <p className="text-gray-600">
+                      {location.latitude.toFixed(6)},{" "}
+                      {location.longitude.toFixed(6)}
+                    </p>
                   </div>
                 </div>
               )}
@@ -411,19 +453,27 @@ const EmployeeDashboard = () => {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-lg font-semibold text-lg hover:from-blue-600 hover:to-indigo-600 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <Loader className="animate-spin" size={20} /> : <Camera size={20} />}
-                {loading ? 'Starting Visit...' : 'Start Visit'}
+                {loading ? (
+                  <Loader className="animate-spin" size={20} />
+                ) : (
+                  <Camera size={20} />
+                )}
+                {loading ? "Starting Visit..." : "Start Visit"}
               </button>
             </form>
           </div>
         )}
 
-        {activeTab === 'end' && (
+        {activeTab === "end" && (
           <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">End Your Day</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              End Your Day
+            </h2>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Day Photo (Required)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  End Day Photo (Required)
+                </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition">
                   <Camera size={48} className="mx-auto text-gray-400 mb-2" />
                   <input
@@ -434,8 +484,11 @@ const EmployeeDashboard = () => {
                     className="hidden"
                     id="end-day-photo"
                   />
-                  <label htmlFor="end-day-photo" className="cursor-pointer text-blue-600 font-medium">
-                    {endDayPhoto ? endDayPhoto.name : 'Tap to take photo'}
+                  <label
+                    htmlFor="end-day-photo"
+                    className="cursor-pointer text-blue-600 font-medium"
+                  >
+                    {endDayPhoto ? endDayPhoto.name : "Tap to take photo"}
                   </label>
                 </div>
               </div>
@@ -445,20 +498,28 @@ const EmployeeDashboard = () => {
                 disabled={loading || !endDayPhoto}
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-4 rounded-lg font-semibold text-lg hover:from-green-600 hover:to-emerald-600 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <Loader className="animate-spin" size={20} /> : <CheckCircle size={20} />}
-                {loading ? 'Ending Day...' : 'End Day'}
+                {loading ? (
+                  <Loader className="animate-spin" size={20} />
+                ) : (
+                  <CheckCircle size={20} />
+                )}
+                {loading ? "Ending Day..." : "End Day"}
               </button>
             </div>
           </div>
         )}
 
-        {activeTab === 'leave' && (
+        {activeTab === "leave" && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Request Leave</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Request Leave
+              </h2>
               <form onSubmit={handleRequestLeave} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Leave Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Leave Date
+                  </label>
                   <input
                     type="date"
                     value={leaveDate}
@@ -468,7 +529,9 @@ const EmployeeDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Reason</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason
+                  </label>
                   <textarea
                     value={leaveReason}
                     onChange={(e) => setLeaveReason(e.target.value)}
@@ -483,27 +546,43 @@ const EmployeeDashboard = () => {
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition disabled:opacity-50"
                 >
-                  {loading ? 'Submitting...' : 'Submit Request'}
+                  {loading ? "Submitting..." : "Submit Request"}
                 </button>
               </form>
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Leave Status</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Leave Status
+              </h2>
               <div className="space-y-3">
                 {leaves.length === 0 ? (
-                  <p className="text-gray-500 text-center py-4">No leave requests found</p>
+                  <p className="text-gray-500 text-center py-4">
+                    No leave requests found
+                  </p>
                 ) : (
                   leaves.map((l) => (
-                    <div key={l.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div
+                      key={l.id}
+                      className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100"
+                    >
                       <div>
-                        <p className="font-semibold text-gray-900">{l.leave_date}</p>
-                        <p className="text-xs text-gray-500 truncate max-w-[150px]">{l.reason}</p>
+                        <p className="font-semibold text-gray-900">
+                          {l.leave_date}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate max-w-[150px]">
+                          {l.reason}
+                        </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${l.status === 'approved' ? 'bg-green-100 text-green-700' :
-                        l.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                          l.status === "approved"
+                            ? "bg-green-100 text-green-700"
+                            : l.status === "rejected"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
                         {l.status}
                       </span>
                     </div>
@@ -514,18 +593,25 @@ const EmployeeDashboard = () => {
           </div>
         )}
 
-        {activeTab === 'history' && (
+        {activeTab === "history" && (
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Visit History</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Your Visit History
+            </h2>
             {visits.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
                 <p className="text-gray-500">No visits recorded yet</p>
               </div>
             ) : (
               visits.map((visit) => (
-                <div key={visit.id} className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                <div
+                  key={visit.id}
+                  className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition"
+                >
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">{visit.shop_name}</h3>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      {visit.shop_name}
+                    </h3>
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
                       Completed
                     </span>
@@ -541,7 +627,10 @@ const EmployeeDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin size={16} />
-                      <span>{visit.latitude.toFixed(6)}, {visit.longitude.toFixed(6)}</span>
+                      <span>
+                        {visit.latitude.toFixed(6)},{" "}
+                        {visit.longitude.toFixed(6)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -557,7 +646,7 @@ const EmployeeDashboard = () => {
 // ============ Admin Dashboard ============
 const AdminDashboard = () => {
   const { user, token, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState({});
   const [visits, setVisits] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -572,23 +661,24 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, visitsRes, employeesRes, leavesRes, endDayRes] = await Promise.all([
-        fetch(`${API_URL}/admin/dashboard`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_URL}/visits`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_URL}/admin/employees`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_URL}/leave/all`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`${API_URL}/visits/end-day-photos`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      ]);
+      const [statsRes, visitsRes, employeesRes, leavesRes, endDayRes] =
+        await Promise.all([
+          fetch(`${API_URL}/admin/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/visits`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/admin/employees`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/leave/all`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_URL}/visits/end-day-photos`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
       const statsData = await statsRes.json();
       const visitsData = await visitsRes.json();
@@ -602,7 +692,7 @@ const AdminDashboard = () => {
       setLeaves(leavesData.leave_requests || []);
       setEndDayRecords(endDayData.end_day_records || []);
     } catch (err) {
-      console.error('Failed to fetch dashboard data', err);
+      console.error("Failed to fetch dashboard data", err);
     } finally {
       setLoading(false);
     }
@@ -610,15 +700,15 @@ const AdminDashboard = () => {
   const handleUpdateLeave = async (leaveId, status) => {
     try {
       const response = await fetch(`${API_URL}/leave/update`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ leave_id: leaveId, status })
+        body: JSON.stringify({ leave_id: leaveId, status }),
       });
 
-      if (!response.ok) throw new Error('Failed to update leave');
+      if (!response.ok) throw new Error("Failed to update leave");
 
       alert(`Leave ${status} successfully!`);
       fetchDashboardData();
@@ -628,7 +718,9 @@ const AdminDashboard = () => {
   };
 
   const StatCard = ({ title, value, icon: Icon, color }) => (
-    <div className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg transform hover:scale-105 transition`}>
+    <div
+      className={`bg-gradient-to-br ${color} rounded-2xl p-6 text-white shadow-lg transform hover:scale-105 transition`}
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
           <p className="text-white/80 text-sm font-medium">{title}</p>
@@ -648,7 +740,12 @@ const AdminDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold" style={{ fontFamily: 'Playfair Display, serif' }}>Texla Admin</h1>
+              <h1
+                className="text-3xl font-bold"
+                style={{ fontFamily: "Playfair Display, serif" }}
+              >
+                Texla Admin
+              </h1>
               <p className="text-indigo-100 mt-1">{user?.name}</p>
             </div>
             <button
@@ -666,47 +763,52 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 mt-6">
         <div className="flex gap-2 bg-white rounded-xl p-2 shadow-sm">
           <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${activeTab === 'overview'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("overview")}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+              activeTab === "overview"
+                ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('visits')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${activeTab === 'visits'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("visits")}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+              activeTab === "visits"
+                ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Visits
           </button>
           <button
-            onClick={() => setActiveTab('employees')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${activeTab === 'employees'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("employees")}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+              activeTab === "employees"
+                ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Employees
           </button>
           <button
-            onClick={() => setActiveTab('leaves')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${activeTab === 'leaves'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("leaves")}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+              activeTab === "leaves"
+                ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             Leaves
           </button>
           <button
-            onClick={() => setActiveTab('endday')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${activeTab === 'endday'
-              ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-100'
-              }`}
+            onClick={() => setActiveTab("endday")}
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition ${
+              activeTab === "endday"
+                ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
           >
             End Day
           </button>
@@ -721,7 +823,7 @@ const AdminDashboard = () => {
           </div>
         ) : (
           <>
-            {activeTab === 'overview' && (
+            {activeTab === "overview" && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                   <StatCard
@@ -751,17 +853,30 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="bg-white rounded-2xl shadow-lg p-8">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Activity</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    Recent Activity
+                  </h2>
                   <div className="space-y-4">
                     {visits.slice(0, 5).map((visit) => (
-                      <div key={visit.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+                      <div
+                        key={visit.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition"
+                      >
                         <div>
-                          <p className="font-semibold text-gray-900">{visit.employee_name}</p>
-                          <p className="text-sm text-gray-600">{visit.shop_name}</p>
+                          <p className="font-semibold text-gray-900">
+                            {visit.employee_name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {visit.shop_name}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">{visit.visit_date}</p>
-                          <p className="text-xs text-gray-500">{visit.visit_time}</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {visit.visit_date}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {visit.visit_time}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -770,45 +885,77 @@ const AdminDashboard = () => {
               </>
             )}
 
-            {activeTab === 'visits' && (
+            {activeTab === "visits" && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500">
                   <h2 className="text-2xl font-bold text-white">All Visits</h2>
                 </div>
                 <div className="p-6">
                   {visits.length === 0 ? (
-                    <p className="text-center text-gray-500 py-12">No visits recorded yet</p>
+                    <p className="text-center text-gray-500 py-12">
+                      No visits recorded yet
+                    </p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-gray-200">
-                            <th className="text-left py-4 px-4 font-semibold text-gray-700">Employee</th>
-                            <th className="text-left py-4 px-4 font-semibold text-gray-700">Shop Name</th>
-                            <th className="text-left py-4 px-4 font-semibold text-gray-700">Date</th>
-                            <th className="text-left py-4 px-4 font-semibold text-gray-700">Time</th>
-                            <th className="text-left py-4 px-4 font-semibold text-gray-700">Photo</th>
-                            <th className="text-left py-4 px-4 font-semibold text-gray-700">Location</th>
+                            <th className="text-left py-4 px-4 font-semibold text-gray-700">
+                              Employee
+                            </th>
+                            <th className="text-left py-4 px-4 font-semibold text-gray-700">
+                              Shop Name
+                            </th>
+                            <th className="text-left py-4 px-4 font-semibold text-gray-700">
+                              Date
+                            </th>
+                            <th className="text-left py-4 px-4 font-semibold text-gray-700">
+                              Time
+                            </th>
+                            <th className="text-left py-4 px-4 font-semibold text-gray-700">
+                              Photo
+                            </th>
+                            <th className="text-left py-4 px-4 font-semibold text-gray-700">
+                              Location
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {visits.map((visit) => (
-                            <tr key={visit.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                              <td className="py-4 px-4">{visit.employee_name}</td>
-                              <td className="py-4 px-4 font-medium">{visit.shop_name}</td>
+                            <tr
+                              key={visit.id}
+                              className="border-b border-gray-100 hover:bg-gray-50 transition"
+                            >
+                              <td className="py-4 px-4">
+                                {visit.employee_name}
+                              </td>
+                              <td className="py-4 px-4 font-medium">
+                                {visit.shop_name}
+                              </td>
                               <td className="py-4 px-4">{visit.visit_date}</td>
                               <td className="py-4 px-4">{visit.visit_time}</td>
                               <td className="py-4 px-4">
                                 {visit.visit_photo ? (
-                                  <a href={visit.visit_photo} target="_blank" rel="noopener noreferrer">
-                                    <img src={visit.visit_photo} alt="Visit" className="w-12 h-12 rounded-lg object-cover border border-gray-200 hover:scale-110 transition cursor-pointer" />
+                                  <a
+                                    href={visit.visit_photo}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <img
+                                      src={visit.visit_photo}
+                                      alt="Visit"
+                                      className="w-12 h-12 rounded-lg object-cover border border-gray-200 hover:scale-110 transition cursor-pointer"
+                                    />
                                   </a>
                                 ) : (
-                                  <span className="text-gray-400">No photo</span>
+                                  <span className="text-gray-400">
+                                    No photo
+                                  </span>
                                 )}
                               </td>
                               <td className="py-4 px-4 text-sm text-gray-600">
-                                {visit.latitude.toFixed(4)}, {visit.longitude.toFixed(4)}
+                                {visit.latitude.toFixed(4)},{" "}
+                                {visit.longitude.toFixed(4)}
                               </td>
                             </tr>
                           ))}
@@ -820,7 +967,7 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {activeTab === 'employees' && (
+            {activeTab === "employees" && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500">
                   <h2 className="text-2xl font-bold text-white">Employees</h2>
@@ -828,14 +975,21 @@ const AdminDashboard = () => {
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {employees.map((employee) => (
-                      <div key={employee.id} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 hover:shadow-md transition">
+                      <div
+                        key={employee.id}
+                        className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 hover:shadow-md transition"
+                      >
                         <div className="flex items-center gap-4 mb-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
                             {employee.name.charAt(0)}
                           </div>
                           <div>
-                            <h3 className="font-bold text-gray-900">{employee.name}</h3>
-                            <p className="text-sm text-gray-600">{employee.email}</p>
+                            <h3 className="font-bold text-gray-900">
+                              {employee.name}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {employee.email}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
@@ -849,41 +1003,61 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
-            {activeTab === 'leaves' && (
+            {activeTab === "leaves" && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
                   <h2 className="text-2xl font-bold">Leave Requests</h2>
                 </div>
                 <div className="p-6">
                   {leaves.length === 0 ? (
-                    <p className="text-center text-gray-500 py-12">No leave requests found</p>
+                    <p className="text-center text-gray-500 py-12">
+                      No leave requests found
+                    </p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {leaves.map((leave) => (
-                        <div key={leave.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                        <div
+                          key={leave.id}
+                          className="bg-gray-50 rounded-xl p-6 border border-gray-200"
+                        >
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="font-bold text-gray-900">{leave.employee_name}</h3>
-                              <p className="text-sm text-gray-500">{leave.leave_date}</p>
+                              <h3 className="font-bold text-gray-900">
+                                {leave.employee_name}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {leave.leave_date}
+                              </p>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${leave.status === 'approved' ? 'bg-green-100 text-green-700' :
-                              leave.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                'bg-yellow-100 text-yellow-700'
-                              }`}>
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                                leave.status === "approved"
+                                  ? "bg-green-100 text-green-700"
+                                  : leave.status === "rejected"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
                               {leave.status}
                             </span>
                           </div>
-                          <p className="text-gray-700 text-sm mb-6">{leave.reason}</p>
-                          {leave.status === 'pending' && (
+                          <p className="text-gray-700 text-sm mb-6">
+                            {leave.reason}
+                          </p>
+                          {leave.status === "pending" && (
                             <div className="flex gap-2">
                               <button
-                                onClick={() => handleUpdateLeave(leave.id, 'approved')}
+                                onClick={() =>
+                                  handleUpdateLeave(leave.id, "approved")
+                                }
                                 className="flex-1 bg-green-500 text-white py-2 rounded-lg font-medium hover:bg-green-600 transition"
                               >
                                 Approve
                               </button>
                               <button
-                                onClick={() => handleUpdateLeave(leave.id, 'rejected')}
+                                onClick={() =>
+                                  handleUpdateLeave(leave.id, "rejected")
+                                }
                                 className="flex-1 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition"
                               >
                                 Reject
@@ -897,27 +1071,44 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
-            {activeTab === 'endday' && (
+            {activeTab === "endday" && (
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                 <div className="p-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
                   <h2 className="text-2xl font-bold">End Day Records</h2>
                 </div>
                 <div className="p-6">
                   {endDayRecords.length === 0 ? (
-                    <p className="text-center text-gray-500 py-12">No end-day records found</p>
+                    <p className="text-center text-gray-500 py-12">
+                      No end-day records found
+                    </p>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {endDayRecords.map((record) => (
-                        <div key={record.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div
+                          key={record.id}
+                          className="bg-gray-50 rounded-xl p-4 border border-gray-200"
+                        >
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="font-bold text-gray-900">{record.employee_name}</h3>
-                              <p className="text-sm text-gray-500">{record.date} at {record.time}</p>
+                              <h3 className="font-bold text-gray-900">
+                                {record.employee_name}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {record.date} at {record.time}
+                              </p>
                             </div>
                           </div>
                           {record.photo ? (
-                            <a href={record.photo} target="_blank" rel="noopener noreferrer">
-                              <img src={record.photo} alt="End Day" className="w-full h-48 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition cursor-pointer" />
+                            <a
+                              href={record.photo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <img
+                                src={record.photo}
+                                alt="End Day"
+                                className="w-full h-48 rounded-lg object-cover border border-gray-200 hover:opacity-90 transition cursor-pointer"
+                              />
                             </a>
                           ) : (
                             <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
@@ -954,7 +1145,7 @@ function App() {
     return <Login />;
   }
 
-  return user.role === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />;
+  return user.role === "admin" ? <AdminDashboard /> : <EmployeeDashboard />;
 }
 
 export default function Root() {
